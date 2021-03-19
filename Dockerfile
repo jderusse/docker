@@ -1,6 +1,13 @@
-FROM --platform=$BUILDPLATFORM alpine
+FROM --platform=$BUILDPLATFORM alpine as bin
 
 ARG TARGETARCH
+ARG BUILDPLATFORM
+
+ADD https://packages.blackfire.io/binaries/blackfire/2.0.0-beta2/blackfire-linux_$TARGETARCH /usr/local/bin/blackfire
+RUN chmod 0555 /usr/local/bin/blackfire
+
+FROM --platform=$BUILDPLATFORM alpine
+
 ARG BUILDPLATFORM
 
 ENV BLACKFIRE_CONFIG /dev/null
@@ -13,9 +20,7 @@ RUN apk add --no-cache curl socat \
  && adduser -S -H -G blackfire -u 999 blackfire
 
 COPY entrypoint.sh /usr/local/bin/
-
-ADD https://packages.blackfire.io/binaries/blackfire/2.0.0-beta2/blackfire-linux_$TARGETARCH /usr/local/bin/blackfire
-RUN chmod 0555 /usr/local/bin/blackfire
+COPY --from=bin /usr/local/bin/blackfire /usr/local/bin/blackfire
 
 # Don't run as root
 USER blackfire

@@ -1,6 +1,11 @@
-FROM alpine
+FROM alpine as bin
 
 ARG TARGETARCH
+
+ADD https://s3-eu-west-1.amazonaws.com/testing.packages.blackfire.io/blackfire/2.0.0-beta2p5-internal/blackfire-linux_${TARGETARCH:-amd64} /usr/local/bin/blackfire
+RUN chmod 0555 /usr/local/bin/blackfire
+
+FROM alpine
 
 ENV BLACKFIRE_CONFIG /dev/null
 ENV BLACKFIRE_LOG_LEVEL 1
@@ -12,9 +17,7 @@ RUN apk add --no-cache curl socat \
  && adduser -S -H -G blackfire -u 999 blackfire
 
 COPY entrypoint.sh /usr/local/bin/
-
-ADD https://s3-eu-west-1.amazonaws.com/testing.packages.blackfire.io/blackfire/2.0.0-beta2p5-internal/blackfire-linux_${TARGETARCH:-amd64} /usr/local/bin/blackfire
-RUN chmod 0555 /usr/local/bin/blackfire
+COPY --from=bin /usr/local/bin/blackfire /usr/local/bin/blackfire
 
 # Don't run as root
 USER blackfire

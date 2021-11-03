@@ -3,7 +3,9 @@ name: build
 on:
   push:
     branches:
-      - 'v2'
+      - 'test'
+    tags:
+      - '2.*'
 
 jobs:
   docker:
@@ -12,6 +14,18 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
+      -
+        name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: jderusse/xxx
+          flavor: |
+            latest=false
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -31,4 +45,5 @@ jobs:
           context: .
           platforms: linux/amd64,linux/386,linux/arm64
           push: true
-          tags: jderusse/xxx:latest
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
